@@ -6,7 +6,22 @@ import ApiResponse from "../utils/ApiResponse.js";
 
 
 
+const generateAccessTokenAndRefreshToken = async (userId) => {
+    try {
+        const user = await User.findById(userId);
+        const accessToken = user.generateAccessToken();
+        const refreshToken = user.generateRefreshToken();
 
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: false });
+
+        return{ accessToken, refreshToken };
+
+    } catch (error) {
+        throw new ApiError(500, "Token generation failed");
+    }
+
+}
 
 
 const registerUser = asyncHandler(async (req, res) => {
@@ -53,13 +68,13 @@ const registerUser = asyncHandler(async (req, res) => {
     }
     console.log("req.files:", req.files);
 
-   // const avterlocalPath = req.files?.avater[0]?.path;    
+    // const avterlocalPath = req.files?.avater[0]?.path;    
     const avatarLocalPath = req.files?.avatar[0]?.path;
     console.log("avatarLocalPath:", avatarLocalPath);
 
-   // const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    // const coverImageLocalPath = req.files?.coverImage[0]?.path;
     //console.log("coverImageLocalPath:", coverImageLocalPath);
-let coverImageLocalPath ;
+    let coverImageLocalPath;
 
 
 
@@ -99,4 +114,75 @@ let coverImageLocalPath ;
 
 })
 
-export { registerUser };
+const loginUser = asyncHandler(async (req, res) => {
+    // Login logic goes here
+    //get user details from frontend
+    // find the user
+    // password comparison 
+    // access and refresh token generation
+    // send cookies
+
+    const { email, password, username } = req.body;
+    console.log("email:", email);
+
+    // if (email === "") {
+    //     throw new ApiError(400, "Email is required");
+    // }
+
+    // if (password ==="") {
+    //     throw new ApiError(400, "Password is required");
+    // }
+
+    if (!email || !password) {
+        throw new ApiError(400, "Email and Password are required");
+    }
+
+    const user = await User.findOne({
+        $or: [{ email }, { username }]
+    })
+
+    if (!user) {
+        throw new ApiError(404, "User dosen't exist");
+    }
+
+    const isPasswordValid = await user.isPasswordCorrect(password);
+
+    if (!isPasswordValid) {
+        throw new ApiError(401, "Invalid credentials");
+    }
+
+const {accessToken, refreshToken} = await generateAccessTokenAndRefreshToken (user._id)
+
+const logedInUser = await User.findById(user._id).select(
+    "-password -refreshToken"
+)
+
+const cookieOptions = {
+    httpOnly: true,
+    secure: true
+}
+
+return res
+.status(200)
+.cookie("refreshToken", refreshToken, cookieOptions)
+.cookie("accessToken", accessToken, cookieOptions)
+.json(
+    new ApiResponse(200, {
+        user: logedInUser,
+        refreshToken
+    },"User logged in successfully")
+)
+
+}
+
+
+
+
+
+
+
+})
+
+
+
+export { registerUser, loginUser };
