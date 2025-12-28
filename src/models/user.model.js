@@ -1,6 +1,7 @@
 import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
+
 
 
 
@@ -11,28 +12,47 @@ const userSchema = new Schema(
             required: true,
             unique: true,
             lowercase: true,
-            trim: true,
-            index: true,
-        }, email: {
+            trim: true, 
+            index: true
+        },
+        email: {
             type: String,
             required: true,
             unique: true,
-            lowercase: true,
-            trim: true,
-        }, avater: {
+            lowecase: true,
+            trim: true, 
+        },
+        fullName: {
             type: String,
             required: true,
-        }, watchHistory: [{
-            type: Schema.Types.ObjectId,
-            ref: "Video",
-        }],password:{
+            trim: true, 
+            index: true
+        },
+        avatar: {
+            type: String, // cloudinary url
+            required: true,
+        },
+        coverImage: {
+            type: String, // cloudinary url
+        },
+        watchHistory: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Video"
+            }
+        ],
+        password: {
             type: String,
-            required:[true,"Password is required"],
-            minlength:[6,"Password must be at least 6 characters long"]
-        },refreshToken:{
-            type: String,
+            required: [true, 'Password is required']
+        },
+        refreshToken: {
+            type: String
         }
-    },{ timestamps: true }
+
+    },
+    {
+        timestamps: true
+    }
 )
 
 userSchema.pre("save",async function (next){
