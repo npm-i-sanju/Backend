@@ -173,12 +173,6 @@ return res
     },"User logged in successfully")
 )
 
-}
-
-
-
-
-
 
 
 })
