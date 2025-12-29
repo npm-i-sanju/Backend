@@ -1,7 +1,7 @@
-import { asyncHandler } from "../utils/asyncHandler.js";
+import { asyncHandler } from "../utils/asyncHendler.js";
 import jwt from "jsonwebtoken";
-import ApiError from "../utils/ApiError.js";
-import User from "../models/User.js";
+import { ApiError } from "../utils/ApiError.js";
+import { User } from "../models/user.model.js";
 
 const veryfyJWT = asyncHandler(async (req , res , next) =>{
     // JWT verification logic will be here
