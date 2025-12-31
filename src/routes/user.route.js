@@ -9,10 +9,10 @@ const router = Router();
 router.route("/register").post(
     upload.fields([
         {
-            name:"avatar",
+            name:"avatar",// fist field name form frontend
             maxCount:1
         },{
-            name:"coverImage",
+            name:"coverImage",// second field name form frontend
             maxCount:1
         }
     ]),

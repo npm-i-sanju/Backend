@@ -39,6 +39,10 @@ const registerUser = asyncHandler(async (req, res) => {
 
     const { fullname, email, username, password } = req.body;
     console.log("email:", email);
+    console.log("username:", username);
+    console.log("fullname:", fullname);
+   // console.log("password:", password);
+   console.log("req.body:", req.body);
 
     if (fullname === "") {
         throw new ApiError(400, "Fullname is required");
@@ -59,7 +63,7 @@ const registerUser = asyncHandler(async (req, res) => {
     //     throw new ApiError(400, "All fields are required");
     // }
 
-    const existedUser = await User.findOne({
+    const existedUser = await User.findOne({ // to check user already exists
         $or: [{ email }, { username }]
     })
 
@@ -67,15 +71,18 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(409, "User already exists with this email or username");
     }
     console.log("req.files:", req.files);
+    console.log("req.files.avatar:", req.files?.avatar);
 
     // const avterlocalPath = req.files?.avater[0]?.path;    
-    const avatarLocalPath = req.files?.avatar[0]?.path;
+    const avatarLocalPath = req.files?.avatar?.[0]?.path;
     console.log("avatarLocalPath:", avatarLocalPath);
 
     // const coverImageLocalPath = req.files?.coverImage[0]?.path;
     //console.log("coverImageLocalPath:", coverImageLocalPath);
     let coverImageLocalPath;
-
+if (res.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+    coverImageLocalPath = req.files.coverImage[0].path;
+}
 
 
 
@@ -84,8 +91,10 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     const avatar = await uploadToCloudinary(avatarLocalPath);
+    console.log("avatar:", avatar);
 
     const coverImage = await uploadToCloudinary(coverImageLocalPath);
+    console.log("coverImage:", coverImage);
 
     if (!avatar) {
         throw new ApiError(400, "Avatar image is required");
