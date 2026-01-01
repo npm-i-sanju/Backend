@@ -3,7 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { uploadToCloudinary } from "../utils/uplod.js";
 import ApiResponse from "../utils/ApiResponse.js";
-
+import jwt from "jsonwebtoken"
 
 
 const generateAccessTokenAndRefreshToken = async (userId) => {
@@ -15,7 +15,7 @@ const generateAccessTokenAndRefreshToken = async (userId) => {
         user.refreshToken = refreshToken;
         await user.save({ validateBeforeSave: false });
 
-        return{ accessToken, refreshToken };
+        return { accessToken, refreshToken };
 
     } catch (error) {
         throw new ApiError(500, "Token generation failed");
@@ -41,8 +41,8 @@ const registerUser = asyncHandler(async (req, res) => {
     console.log("email:", email);
     console.log("username:", username);
     console.log("fullname:", fullname);
-   // console.log("password:", password);
-   console.log("req.body:", req.body);
+    // console.log("password:", password);
+    console.log("req.body:", req.body);
 
     if (fullname === "") {
         throw new ApiError(400, "Fullname is required");
@@ -73,17 +73,17 @@ const registerUser = asyncHandler(async (req, res) => {
     console.log("req.files:", req.files);
     console.log("req.files.avatar:", req.files?.avatar);
 
-    // const avterlocalPath = req.files?.avater[0]?.path;    
+    //const avatarLocalPath = req.files?.avater[0]?.path;    
     const avatarLocalPath = req.files?.avatar?.[0]?.path;
     console.log("avatarLocalPath:", avatarLocalPath);
 
     // const coverImageLocalPath = req.files?.coverImage[0]?.path;
     //console.log("coverImageLocalPath:", coverImageLocalPath);
     let coverImageLocalPath;
-if (res.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
-    coverImageLocalPath = req.files.coverImage[0].path;
-}
-
+    if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
+        coverImageLocalPath = req.files.coverImage[0].path
+    }
+    console.log("coverImageLocalPath:", coverImageLocalPath);
 
 
     if (!avatarLocalPath) {
@@ -97,7 +97,7 @@ if (res.files && Array.isArray(req.files.coverImage) && req.files.coverImage.len
     console.log("coverImage:", coverImage);
 
     if (!avatar) {
-        throw new ApiError(400, "Avatar image is required");
+        throw new ApiError(400, "Avatar  dedo bhai image is required");
 
     }
 
@@ -160,34 +160,34 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new ApiError(401, "Invalid credentials");
     }
 
-const {accessToken, refreshToken} = await generateAccessTokenAndRefreshToken (user._id)
+    const { accessToken, refreshToken } = await generateAccessTokenAndRefreshToken(user._id)
 
-const logedInUser = await User.findById(user._id).select(
-    "-password -refreshToken"
-)
+    const logedInUser = await User.findById(user._id).select(
+        "-password -refreshToken"
+    )
 
-const cookieOptions = {
-    httpOnly: true,
-    secure: true
-}
+    const cookieOptions = {
+        httpOnly: true,
+        secure: true
+    }
 
-return res
-.status(200)
-.cookie("refreshToken", refreshToken, cookieOptions)
-.cookie("accessToken", accessToken, cookieOptions)
-.json(
-    new ApiResponse(200, {
-        user: logedInUser,
-        refreshToken
-    },"User logged in successfully")
-)
+    return res
+        .status(200)
+        .cookie("refreshToken", refreshToken, cookieOptions)
+        .cookie("accessToken", accessToken, cookieOptions)
+        .json(
+            new ApiResponse(200, {
+                user: logedInUser,
+                refreshToken
+            }, "User logged in successfully")
+        )
 
 
 
 
 })
 
-const logedOutUser = asyncHandler (async (req,res) => {
+const logedOutUser = asyncHandler(async (req, res) => {
     // Logout logic goes here
     // get user id from req.user
     // remove refresh token from db
@@ -195,26 +195,78 @@ const logedOutUser = asyncHandler (async (req,res) => {
     // send response
 
 
- await User.findByIdAndUpdate(req.user._id,{
-    $set:{
-        refreshToken: undefined
+    await User.findByIdAndUpdate(req.user._id, {
+        $set: {
+            refreshToken: undefined
+        }
+    }, {
+        new: true
+    })
+    const cookieOptions = {
+        httpOnly: true,
+        secure: true
     }
- },{
-    new: true
- })
-const cookieOptions = {
-    httpOnly: true,
-    secure: true
-}
-return res
-.status(200)
-.clearCookie("refreshToken",cookieOptions)
-.clearCookie("accessToken",cookieOptions)
-.json(new ApiResponse(200, {},"User logged out successfully"))
+    return res
+        .status(200)
+        .clearCookie("refreshToken", cookieOptions)
+        .clearCookie("accessToken", cookieOptions)
+        .json(new ApiResponse(200, {}, "User logged out successfully"))
 
 
 })
 
+const refreshAccessToken = asyncHandler(async (req, res) => {
+   const incomingRefreshToken =  req.cookies.refreshToken || req.body.refresjToken
+
+if (incomingRefreshToken) {
+    throw new ApiError(400, "Refresh token is required");
+}
+// verify jwt token
+
+try {
+    const decodedtoken =  jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
+    
+    
+    const user = await User.findById(decodedtoken?._id)
+    
+    if (!user) {
+    throw new ApiError("Invalid Refresh Token");
+    
+    }
+    // check user token and decoded token
+    
+    if (incomingRefreshToken !== user?.refreshToken) {
+        throw new ApiError("Invalid Refresh Token")
+        
+    }
+    
+    const options  = {
+        httpOnly: true,
+        secure: true
+    }
+    
+    const {accessToken, newrefreshToken} =  await generateAccessTokenAndRefreshToken(user._id)
+    
+    return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", newrefreshToken, options)
+    .json(
+        new ApiResponse(
+            200,{
+                accessToken, refreshToken:newrefreshToken
+            },
+            "Access token refreshed"
+        )
+    )    
+ } catch (error) {   
+    throw new ApiError(401, error?.message || "invalid refresh token")
+    
+} 
+    })
+
+    
 
 
-export { registerUser, loginUser , logedOutUser};
+
+export { registerUser, loginUser, logedOutUser , refreshAccessToken};

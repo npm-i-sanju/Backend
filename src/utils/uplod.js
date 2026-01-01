@@ -3,21 +3,32 @@ import fs from "fs";
 import { v2 as cloudinary } from "cloudinary";
 
 
+
+
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET // Click 'View API Keys' above to copy your API secret
+    api_secret: process.env.CLOUDINARY_API_SECRET ,// Click 'View API Keys' above to copy your API secret
+   // cloud_url: process.env.CLOUDINARY_URL
 });
 
+console.log("\n=== CHECKING ENVIRONMENT VARIABLES ===");
+console.log("CLOUDINARY_CLOUD_NAME:", process.env.CLOUDINARY_CLOUD_NAME);
+console.log("CLOUDINARY_API_KEY:", process.env.CLOUDINARY_API_KEY);
+console.log("CLOUDINARY_API_SECRET:", process.env.CLOUDINARY_API_SECRET ? "EXISTS" : "MISSING");
+console.log("CLOUDINARY_URL:", process.env.CLOUDINARY_URL);
+console.log("=====================================\n");
 
-const uploadToCloudinary = (localFilePath) => {
+
+const uploadToCloudinary = async (localFilePath) => {
     try {
         if (!localFilePath) return null;
         //upload the file on cloudinary
-        const response = cloudinary.uploader.upload(localFilePath, {
+        const response = await cloudinary.uploader.upload(localFilePath, {
             resource_type: "auto",
         })
         console.log("response", response.url);
+        console.log("localFilePath", localFilePath);
         return response
     } catch (error) {
         fs.unlinkSync(localFilePath);// remove the file from local uploads folder
