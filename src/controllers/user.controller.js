@@ -218,7 +218,7 @@ const logedOutUser = asyncHandler(async (req, res) => {
 const refreshAccessToken = asyncHandler(async (req, res) => {
    const incomingRefreshToken =  req.cookies.refreshToken || req.body.refresjToken
 
-if (incomingRefreshToken) {
+if (!incomingRefreshToken) {
     throw new ApiError(400, "Refresh token is required");
 }
 // verify jwt token
