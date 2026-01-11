@@ -3,7 +3,8 @@ import {
     loginUser, registerUser, logedOutUser,
     refreshAccessToken, changeCurrentPassword,
     getCurrentUser, updateUserDetails, updateUserAvatar,
-    updateCoverImag, getUserChannelProfile, getWatchHistory
+     getUserChannelProfile, getWatchHistory,
+    updateCoverImage
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js"
 import { veryfyJWT } from "../middlewares/auth.middleware.js";
@@ -35,7 +36,7 @@ router.route("/change-password").post(veryfyJWT, changeCurrentPassword);
 router.route("/curent-user").get(veryfyJWT, getCurrentUser);
 router.route("/update-account").patch(veryfyJWT, updateUserDetails);
 router.route("/avater").patch(veryfyJWT, upload.single("avater"), updateUserAvatar);
-router.route("/coverImage").patch(veryfyJWT, upload.single("coverImage"), updateCoverImag)
+router.route("/coverImage").patch(veryfyJWT, upload.single("coverImage"), updateCoverImage)
 router.route("/channel/:username").get(veryfyJWT, getUserChannelProfile);
 router.route("/watch-history").get(veryfyJWT, getWatchHistory)
 
