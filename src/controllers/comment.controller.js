@@ -1,5 +1,5 @@
 import {asyncHandler} from "../utils/asyncHendler.js"
-import {ApiResponse} from "../utils/ApiResponse.js"
+import ApiResponse from "../utils/ApiResponse.js"
 import {ApiError} from "../utils/ApiError.js"
 import mongoose, { isValidObjectId } from "mongoose"
 import {Video} from "../models/video.model.js"
