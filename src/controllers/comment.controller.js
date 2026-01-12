@@ -80,14 +80,86 @@ return res
 
 const addComment = asyncHandler(async(req, res) => {
 // add a comment to a video
+const {content} = req.body
+const {videoId} = req.params
+
+if (!content?.trim()) {
+    throw new ApiError(400, "Content is required")
+}
+
+if (!videoId || !isValidObjectId(videoId)) {
+    throw new ApiError(400, "Invalid video id provided")
+}
+
+const newComment =  await Comment.create({
+    content: content.trim(),
+    video: videoId,
+    owner: req.user?._id
+})
+
+if (!newComment) {
+    throw new ApiError(500, "Something went wrong ")
+}
+
+return res
+.status(200)
+.json(new ApiResponse(200, newComment, "Comment successfully"))
+
 })
 
 const updateComment = asyncHandler(async( req, res ) => {
 // update comment
+
+const {commentId} = req.params;
+
+const {content} = req.body;
+ 
+if (!commentId || isValidObjectId(commentId)) {
+    throw new ApiError(400, "invalid comment id")
+}
+
+if (!content?.trim()) {
+    throw new ApiError(400,"content is required")
+}
+
+const updatedComment = await Comment.findByIdAndUpdate(
+    commentId,{
+        $set: {
+            content : content.trim()
+        }
+    },{
+        new: true
+
+    }
+)
+
+if (!updatedComment) {
+    throw new ApiError(500, "Something went wrong")
+}
+
+return res
+.status(200)
+.json(
+     new ApiResponse(200, updatedComment, "Comment update successfuly")
+)
+
 })
 
 const deleteComment = asyncHandler(async(req, res )=>{
     // delete Comment
+const {commentId} = req.params
+
+if (!commentId || isValidObjectId(commentId)) {
+    throw new ApiError(400,"invalid Comment id" )
+}
+
+const comment = await Comment.findByIdDelete(comment)
+
+return res
+.status(200)
+.json(new ApiError(200, comment, "Comment delete"))
+
+
 })
 
 
